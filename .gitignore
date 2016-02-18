@@ -1,1 +1,5 @@
 target/
+#command_line.rs#
+command_line.rs~
+conversions.rs~
+wallet.rs~
