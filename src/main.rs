@@ -15,7 +15,7 @@ fn main() {
     
     let mut user_wallet: wallet::Wallet = Default::default();
     
-    thread::sleep(Duration::from_millis(900));
+    thread::sleep(Duration::from_millis(1200));
     println!("Enter wallet identifier: ");  
     io::stdin().read_line(&mut user_wallet.guid).expect("Failed to read");
     
