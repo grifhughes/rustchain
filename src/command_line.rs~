@@ -1,0 +1,5 @@
+use std::process::Command;
+
+pub fn initialize_server() {
+    let process = Command::new("blockchain-wallet-service").args(&["start", "--port 3000"]).unwrap_or_else(|e| { panic!("Could not execute {}", e); } );
+}
