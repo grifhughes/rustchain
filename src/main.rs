@@ -35,22 +35,21 @@ fn main() {
     let mut amount_satoshi = String::new();
     io::stdin().read_line(&mut amount_satoshi).expect("Failed to read");
     let amount_btc = conversions::satoshi_to_btc(amount_satoshi.trim().parse::<f32>().expect("Error: failed to parse")).to_string();
-   
-    let f1 = "http://localhost:3000/merchant/".to_string();
-    let f2 = "/payment?password=";
-    let f3 = "&to=";
-    let f4 = "&amount=";
-    let url = f1 + &user_wallet.guid + f2 + &user_wallet.main_password + f3 + &dest_addr + f4 + &amount_btc;
-    println!("{}", url);
 
     let client = Client::new();
-    
-    let mut res = client.get(&url).header(Connection::close()).send().unwrap();
+
+    let login_url = "http://localhost:3000/merchant/".to_string() + &user_wallet.guid + "/login?password=" + &user_wallet.main_password + "&api_code=581dfe1f-34fc-4660-abe7-c2d0f104a546";
+    let mut res = client.get(&login_url).header(Connection::close()).send().unwrap();
     let mut body = String::new();
     res.read_to_string(&mut body).unwrap();
-
     println!("Response: {}", body);
-
+    
+    let payment_url = "http://localhost:3000/merchant/".to_string() + &user_wallet.guid + "/payment?password=" + &user_wallet.main_password + "&to=" + &dest_addr +  "&amount=" + &amount_btc;
+    let mut res = client.get(&payment_url).header(Connection::close()).send().unwrap();
+    let mut body = String::new();
+    res.read_to_string(&mut body).unwrap();
+    println!("Response: {}", body);
+    
     unsafe {
         kill(child.id() as i32, SIGTERM);
     }    
