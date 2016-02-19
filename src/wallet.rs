@@ -18,6 +18,14 @@ impl Wallet {
         let amount_satoshi_string = conversions::btc_to_satoshi(amount_btc).to_string();
         "http://localhost:3000/merchant/".to_string() + &self.guid + "/payment?password=" + &self.main_password + "&to=" + dest_addr + "&amount=" + &amount_satoshi_string
     }
+
+    pub fn send_payment_from_addr(&self, dest_addr: &str, amount_btc: f32, from_addr: &str) -> String {
+        let amount_satoshi_string = conversions::btc_to_satoshi(amount_btc).to_string();
+        "http://localhost:3000/merchant/".to_string() + &self.guid + "/payment?password=" + &self.main_password + "&to=" + dest_addr + "&amount=" + &amount_satoshi_string + "&from=" + from_addr
+    }
+
+    pub fn send_payment_from_addr_with_note(&self, dest_addr: &str, amount_btc: f32, from_addr: &str, note: &str) -> String {
+         let amount_satoshi_string = conversions::btc_to_satoshi(amount_btc).to_string();
+        "http://localhost:3000/merchant/".to_string() + &self.guid + "/payment?password=" + &self.main_password + "&to=" + dest_addr + "&amount=" + &amount_satoshi_string + "&from=" + from_addr + "&note=" + note
+    }
 }
-
-

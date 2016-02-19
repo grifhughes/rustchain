@@ -17,6 +17,7 @@ use libc::{kill, SIGTERM};
 fn query_url(url: String, cl: &Client) {
     let mut res = cl.get(&url).header(Connection::close()).send().unwrap();
     let mut body = String::new();
+    
     res.read_to_string(&mut body).unwrap();
     println!("Response: {}", body);
 }
@@ -48,6 +49,7 @@ fn main() {
         println!("Enter a destination address:");
         let mut destination = String::new();
         input.read_line(&mut destination).expect("Failed to read");
+        
         println!("Enter amount in BTC:");
         let mut amount = String::new();
         input.read_line(&mut amount).expect("Failed to read");
