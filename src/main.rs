@@ -16,10 +16,10 @@ use libc::{kill, SIGTERM};
 
 fn query_url(url: String, cl: &Client) {
     let mut res = cl.get(&url).header(Connection::close()).send().unwrap();
-    let mut body = String::new();
-    
-    res.read_to_string(&mut body).unwrap();
-    println!("Response: {}", body);
+    let mut json_response = String::new();   
+    res.read_to_string(&mut json_response).unwrap();
+   
+    println!("Response: {}", json_response);
 }
 
 fn main() {
@@ -32,8 +32,7 @@ fn main() {
     
     thread::sleep(Duration::from_millis(1200));
 
-    println!("Login to wallet");
-    println!("Enter wallet identifier: ");  
+    println!("Login to wallet\nEnter wallet identifier:");
     input.read_line(&mut user_wallet.guid).expect("Failed to read");
     
     println!("Enter wallet password: ");
@@ -41,22 +40,26 @@ fn main() {
        
     query_url(user_wallet.login(), &client);
 
-    println!("Do you wish to send a payment?");
-    let mut payment = String::new();
-    input.read_line(&mut payment).expect("Failed to read");
-    
-    if payment.trim() == "yes" {
-        println!("Enter a destination address:");
-        let mut destination = String::new();
-        input.read_line(&mut destination).expect("Failed to read");
-        
-        println!("Enter amount in BTC:");
-        let mut amount = String::new();
-        input.read_line(&mut amount).expect("Failed to read");
-        
-        query_url(user_wallet.send_payment(&destination, amount.trim().parse::<f32>().expect("Failed to parse")), &client);        
-    } else {
-        // TODO
+    //assumes successful login, TODO add error checking
+    println!("Options\n1 - send payment\n2 - fetch wallet balance\n3 - fetch balance at specific address\n4 - list wallet addresses");
+
+    let mut option = String::new();
+    input.read_line(&mut option).expect("Failed to read");
+
+    match option.trim().parse::<i8>().unwrap() {
+        1 => {
+            println!("Enter destination address:");
+            let mut destination = String::new();
+            input.read_line(&mut destination).expect("Failed to read");
+            
+            println!("Enter amount in BTC:");
+            let mut amount_btc = String::new();
+            input.read_line(&mut amount_btc).expect("Failed to read");
+            
+            query_url(user_wallet.send_payment(&destination, conversions::btc_to_satoshi(amount_btc.trim().parse::<f32>().expect("Failed to parse"))), &client);
+        },
+        2 => query_url(user_wallet.wallet_balance(), &client),      
+        _ => panic!("Error invalid option")
     }
     
     unsafe {

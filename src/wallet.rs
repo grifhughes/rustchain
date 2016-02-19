@@ -1,5 +1,8 @@
 use conversions;
 
+const API_CODE: &'static str = "581dfe1f-34fc-4660-abe7-c2d0f104a546";
+const MERCHANT_ENDPOINT: &'static str = "http://localhost:3000/merchant/";
+
 #[derive(Default)]
 pub struct Wallet {
     pub guid: String,
@@ -11,21 +14,33 @@ pub struct Wallet {
 
 impl Wallet {
     pub fn login(&self) -> String {
-        "http://localhost:3000/merchant/".to_string() + &self.guid + "/login?password=" + &self.main_password + "&api_code=581dfe1f-34fc-4660-abe7-c2d0f104a546"
+        MERCHANT_ENDPOINT.to_string() + &self.guid + "/login?password=" + &self.main_password + "&api_code=" + API_CODE
     }
 
     pub fn send_payment(&self, dest_addr: &str, amount_btc: f32) -> String {
         let amount_satoshi_string = conversions::btc_to_satoshi(amount_btc).to_string();
-        "http://localhost:3000/merchant/".to_string() + &self.guid + "/payment?password=" + &self.main_password + "&to=" + dest_addr + "&amount=" + &amount_satoshi_string
+        MERCHANT_ENDPOINT.to_string() + &self.guid + "/payment?password=" + &self.main_password + "&to=" + dest_addr + "&amount=" + &amount_satoshi_string
     }
 
     pub fn send_payment_from_addr(&self, dest_addr: &str, amount_btc: f32, from_addr: &str) -> String {
         let amount_satoshi_string = conversions::btc_to_satoshi(amount_btc).to_string();
-        "http://localhost:3000/merchant/".to_string() + &self.guid + "/payment?password=" + &self.main_password + "&to=" + dest_addr + "&amount=" + &amount_satoshi_string + "&from=" + from_addr
+        MERCHANT_ENDPOINT.to_string() + &self.guid + "/payment?password=" + &self.main_password + "&to=" + dest_addr + "&amount=" + &amount_satoshi_string + "&from=" + from_addr
     }
 
     pub fn send_payment_from_addr_with_note(&self, dest_addr: &str, amount_btc: f32, from_addr: &str, note: &str) -> String {
-         let amount_satoshi_string = conversions::btc_to_satoshi(amount_btc).to_string();
-        "http://localhost:3000/merchant/".to_string() + &self.guid + "/payment?password=" + &self.main_password + "&to=" + dest_addr + "&amount=" + &amount_satoshi_string + "&from=" + from_addr + "&note=" + note
+        let amount_satoshi_string = conversions::btc_to_satoshi(amount_btc).to_string();
+        MERCHANT_ENDPOINT.to_string() + &self.guid + "/payment?password=" + &self.main_password + "&to=" + dest_addr + "&amount=" + &amount_satoshi_string + "&from=" + from_addr + "&note=" + note
     }
+
+    pub fn wallet_balance(&self) -> String {
+        MERCHANT_ENDPOINT.to_string() + &self.guid + "/balance?password=" + &self.main_password
+    }
+
+    pub fn address_list(&self) -> String {
+        MERCHANT_ENDPOINT.to_string() + &self.guid + "/list?password=" + &self.main_password
+    }
+
+    pub fn address_balance(&self, addr: &str) -> String {
+        MERCHANT_ENDPOINT.to_string() + &self.guid + "/address_balance?address=" + addr + "&password=" + &self.main_password
+    } 
 }
