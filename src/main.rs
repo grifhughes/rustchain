@@ -41,7 +41,7 @@ fn main() {
     query_url(user_wallet.login(), &client);
 
     //assumes successful login, TODO add error checking
-    println!("Options\n1 - send payment\n2 - fetch wallet balance\n3 - fetch balance at specific address\n4 - list wallet addresses");
+    println!("1 - send payment\n2 - fetch wallet balance\n3 - fetch balance at specific address\n4 - list wallet addresses");
 
     let mut option = String::new();
     input.read_line(&mut option).expect("Failed to read");
@@ -58,7 +58,15 @@ fn main() {
             
             query_url(user_wallet.send_payment(&destination, conversions::btc_to_satoshi(amount_btc.trim().parse::<f32>().expect("Failed to parse"))), &client);
         },
-        2 => query_url(user_wallet.wallet_balance(), &client),      
+        2 => query_url(user_wallet.wallet_balance(), &client),
+        3 => {
+            println!("Enter specific addresss:");
+            let mut address = String::new();
+            input.read_line(&mut address).expect("Failed to read");
+
+            query_url(user_wallet.address_balance(&address), &client);
+        },
+        4 => query_url(user_wallet.address_list(), &client),
         _ => panic!("Error invalid option")
     }
     
