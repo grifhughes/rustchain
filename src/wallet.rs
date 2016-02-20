@@ -3,7 +3,7 @@ use conversions;
 const API_CODE: &'static str = "581dfe1f-34fc-4660-abe7-c2d0f104a546";
 const MERCHANT_ENDPOINT: &'static str = "http://localhost:3000/merchant/";
 
-#[derive(Default)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct Wallet {
     pub guid: String,
     pub main_password: String,
