@@ -25,7 +25,7 @@ fn query_url(url: String, cl: &Client) -> String {
 }
 
 fn main() {
-    let mut child = command_line::initialize_server().unwrap_or_else(|e| { panic!("Failed to start server: {}", e); });
+    let child = command_line::initialize_server().unwrap_or_else(|e| { panic!("Failed to start server: {}", e); });
 
     let input = io::stdin();
     
@@ -40,7 +40,7 @@ fn main() {
         if query_url(wallet.login(), &client).as_str().contains("true") {
             println!("Successful login...");
 
-            println!("1 - send payment\n2 - fetch wallet balance\n3 - fetch balance at specific address\n4 - list wallet addresses\n5 - generate new address\n6 - generate new address with specified label");
+            println!("1 - send payment\n2 - fetch wallet balance\n3 - fetch balance at specific address\n4 - list wallet addresses\n5 - generate new address\n6 - generate new address with specified label\n7 - archive address\n8 - unarchive address");
 
             let mut option = String::new();
             input.read_line(&mut option).expect("Failed to read");
@@ -69,6 +69,7 @@ fn main() {
                 5 => {
                     println!("Generating new address...");
                     println!("{}", query_url(wallet.generate_address(), &client));
+                    
                     thread::park_timeout(Duration::from_millis(2000));
                 },
                 6 => {
@@ -77,8 +78,25 @@ fn main() {
                     input.read_line(&mut label).expect("Failed to read");
                     println!("Generating new address with label {}...", label);
                     query_url(wallet.generate_address_with_label(&label), &client);
+                    
                     thread::park_timeout(Duration::from_millis(2000));
-            },
+                },
+                7 => {
+                    println!("Enter address to archive:");
+                    let mut address = String::new();
+                    input.read_line(&mut address).expect("Failed to read");
+                    query_url(wallet.archive_address(&address), &client);
+                    
+                    thread::park_timeout(Duration::from_millis(2000));
+                },
+                8 => {
+                    println!("Enter address to unarchive:");
+                    let mut address = String::new();
+                    input.read_line(&mut address).expect("Failed to read");
+                    query_url(wallet.unarchive_address(&address), &client);
+                    
+                    thread::park_timeout(Duration::from_millis(2000));
+                },
                 _ => panic!("Error invalid option")
             }
         } else {

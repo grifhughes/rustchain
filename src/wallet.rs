@@ -56,5 +56,13 @@ impl Wallet {
 
     pub fn generate_address_with_label(&self, label: &str) -> String {
         MERCHANT_ENDPOINT.to_string() + &self.guid + "/new_address?password=" + &self.main_password + "&label=" + label
-    }  
+    }
+
+    pub fn archive_address(&self, addr: &str) -> String {
+        MERCHANT_ENDPOINT.to_string() + &self.guid + "/archive_address?address=" + addr + "&password=" + &self.main_password
+    }
+
+    pub fn unarchive_address(&self, addr: &str) -> String {
+        MERCHANT_ENDPOINT.to_string() + &self.guid + "/unarchive_address?address=" + addr + "&password=" + &self.main_password
+    }    
 }
