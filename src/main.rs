@@ -29,7 +29,7 @@ fn main() {
 
     let input = io::stdin();
     
-    thread::sleep(Duration::from_millis(1200));
+    thread::park_timeout(Duration::from_millis(2000));
 
     if path::Path::new("wallet.bin").exists() {
         let client = Client::new();
