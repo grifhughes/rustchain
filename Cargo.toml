@@ -7,5 +7,4 @@ authors = ["Grif Hughes <ghughes@smu.edu>"]
 hyper = "0.7.2"
 serde = "0.6.13"
 serde_macros = "*"
-flate2 = "*"
 bincode = "*"

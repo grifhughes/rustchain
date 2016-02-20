@@ -4,7 +4,6 @@ extern crate libc;
 extern crate hyper;
 extern crate bincode;
 extern crate serde;
-extern crate flate2;
 
 pub mod wallet;
 mod conversions;
@@ -17,9 +16,6 @@ use std::path;
 use std::io::Read;
 use hyper::Client;
 use hyper::header::Connection;
-use flate2::write::ZlibEncoder;
-use flate2::read::ZlibDecoder;
-use flate2::Compression;
 use std::time::Duration;
 use libc::{kill, SIGTERM};
 
@@ -38,12 +34,11 @@ fn main() {
     
     thread::sleep(Duration::from_millis(1200));
 
-    if path::Path::new("wallet.bin.gz").exists() {
+    if path::Path::new("wallet.bin").exists() {
         let client = Client::new();
         
-        let reader = io::BufReader::new(fs::File::open("wallet.bin.gz").unwrap());
-        let mut decoder = ZlibDecoder::new(reader);
-        let wallet: wallet::Wallet = bincode::serde::deserialize_from(&mut decoder, bincode::SizeLimit::Infinite).unwrap();
+        let mut reader = io::BufReader::new(fs::File::open("wallet.bin").unwrap());
+        let wallet: wallet::Wallet = bincode::serde::deserialize_from(&mut reader, bincode::SizeLimit::Infinite).unwrap();
 
         if query_url(wallet.login(), &client).as_str().contains("true") {
             println!("Successful login...");
@@ -94,9 +89,8 @@ fn main() {
         input.read_line(&mut password).expect("Failed to read");
         new_wallet.main_password = password.trim().to_string();
 
-        let writer = io::BufWriter::new(fs::File::create("wallet.bin.gz").unwrap());
-        let mut encoder = ZlibEncoder::new(writer, Compression::Best);
-        bincode::serde::serialize_into(&mut encoder, &new_wallet, bincode::SizeLimit::Infinite).unwrap();
+        let mut writer = io::BufWriter::new(fs::File::create("wallet.bin").unwrap());
+        bincode::serde::serialize_into(&mut writer, &new_wallet, bincode::SizeLimit::Infinite).unwrap();
         println!("Initial wallet configured, exiting...");
     }
     
