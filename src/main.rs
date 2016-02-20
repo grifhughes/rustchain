@@ -77,7 +77,7 @@ fn main() {
                     let mut label = String::new();
                     input.read_line(&mut label).expect("Failed to read");
                     println!("Generating new address with label {}...", label);
-                    query_url(wallet.generate_address_with_label(&label), &client);
+                    query_url(wallet.generate_address_with_label(&label.trim()), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
@@ -85,7 +85,7 @@ fn main() {
                     println!("Enter address to archive:");
                     let mut address = String::new();
                     input.read_line(&mut address).expect("Failed to read");
-                    query_url(wallet.archive_address(&address), &client);
+                    query_url(wallet.archive_address(&address.trim()), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
@@ -93,7 +93,7 @@ fn main() {
                     println!("Enter address to unarchive:");
                     let mut address = String::new();
                     input.read_line(&mut address).expect("Failed to read");
-                    query_url(wallet.unarchive_address(&address), &client);
+                    query_url(wallet.unarchive_address(&address.trim()), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
