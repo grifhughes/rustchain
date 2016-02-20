@@ -9,3 +9,4 @@ TODO
 - handle multiple wallet files
 - implement remaining api functionality
 - some semblance of decent error checking 
+- encrypt binary wallet data(?)
