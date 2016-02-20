@@ -54,8 +54,11 @@ fn main() {
                     println!("Enter amount in BTC:");
                     let mut amount_btc = String::new();
                     input.read_line(&mut amount_btc).expect("Failed to read");
-                    
+
+                    //add validation for addresses/viable amount to spend
                     get_response_from_url(wallet.send_payment(&destination.trim(), conversions::btc_to_satoshi(amount_btc.trim().parse::<f32>().expect("Failed to parse"))), &client);
+                    println!("Success, pushing payment...");
+                    thread::park_timeout(Duration::from_millis(5000));
                 },
                 2 => println!("{}", get_response_from_url(wallet.wallet_balance(), &client)),
                 3 => {
