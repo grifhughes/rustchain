@@ -1,5 +1,5 @@
 # rustchain
-Basic command line wrapper for blockchain wallet api, requires UNIX/nightly compiler
+Basic command line wrapper written in Rust for the blockchain wallet api, requires UNIX/nightly compiler
 
 Must have blockchain wallet serivice installed, see: https://github.com/blockchain/service-my-wallet-v3#installation
 
