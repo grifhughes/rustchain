@@ -3,5 +3,5 @@ use std::io;
 
 pub fn initialize_server() -> Result<Child, io::Error> {
     println!("Starting server...");
-    Command::new("/usr/local/bin/blockchain-wallet-service").arg("start").spawn()
+    Command::new("blockchain-wallet-service").arg("start").spawn()
 }
