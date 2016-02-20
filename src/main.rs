@@ -4,6 +4,7 @@ extern crate libc;
 extern crate hyper;
 extern crate bincode;
 extern crate serde;
+extern crate flate2;
 
 pub mod wallet;
 mod conversions;
@@ -16,6 +17,9 @@ use std::path;
 use std::io::Read;
 use hyper::Client;
 use hyper::header::Connection;
+use flate2::write::ZlibEncoder;
+use flate2::read::ZlibDecoder;
+use flate2::Compression;
 use std::time::Duration;
 use libc::{kill, SIGTERM};
 
@@ -30,14 +34,16 @@ fn query_url(url: String, cl: &Client) -> String {
 fn main() {
     let child = command_line::initialize_server().unwrap_or_else(|e| { panic!("Failed to start server: {}", e); });
 
-    let client = Client::new();
     let input = io::stdin();
     
     thread::sleep(Duration::from_millis(1200));
 
-    if path::Path::new("wallet.bin").exists() {
-        let mut reader = io::BufReader::new(fs::File::open("wallet.bin").unwrap());
-        let wallet: wallet::Wallet = bincode::serde::deserialize_from(&mut reader, bincode::SizeLimit::Infinite).unwrap();
+    if path::Path::new("wallet.bin.gz").exists() {
+        let client = Client::new();
+        
+        let reader = io::BufReader::new(fs::File::open("wallet.bin.gz").unwrap());
+        let mut decoder = ZlibDecoder::new(reader);
+        let wallet: wallet::Wallet = bincode::serde::deserialize_from(&mut decoder, bincode::SizeLimit::Infinite).unwrap();
 
         if query_url(wallet.login(), &client).as_str().contains("true") {
             println!("Successful login...");
@@ -61,7 +67,7 @@ fn main() {
                 },
                 2 => println!("{}", query_url(wallet.wallet_balance(), &client)),
                 3 => {
-                    println!("Enter specific addresss:");
+                    println!("Enter addresss:");
                     let mut address = String::new();
                     input.read_line(&mut address).expect("Failed to read");
 
@@ -78,23 +84,23 @@ fn main() {
 
         let mut new_wallet: wallet::Wallet = Default::default();
 
-        println!("Enter wallet identifier:");
+        println!("Enter blockchain wallet identifier:");
         let mut guid = String::new();
         input.read_line(&mut guid).expect("Failed to read");
         new_wallet.guid = guid.trim().to_string();
         
-        println!("Enter wallet password: ");
+        println!("Enter blockchain wallet password: ");
         let mut password = String::new();
         input.read_line(&mut password).expect("Failed to read");
         new_wallet.main_password = password.trim().to_string();
 
-        let mut writer = io::BufWriter::new(fs::File::create("wallet.bin").unwrap());
-        bincode::serde::serialize_into(&mut writer, &new_wallet, bincode::SizeLimit::Infinite).unwrap();
-        println!("Wallet configured, exiting...");
+        let writer = io::BufWriter::new(fs::File::create("wallet.bin.gz").unwrap());
+        let mut encoder = ZlibEncoder::new(writer, Compression::Best);
+        bincode::serde::serialize_into(&mut encoder, &new_wallet, bincode::SizeLimit::Infinite).unwrap();
+        println!("Initial wallet configured, exiting...");
     }
     
     unsafe {
         kill(child.id() as i32, SIGTERM);
     }
-}   
-        
+}        
