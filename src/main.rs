@@ -12,11 +12,9 @@ mod command_line;
 
 use std::{io, thread, fs, path};
 use std::io::Read;
-use std::collections;
-use std::cell::RefCell;
 use hyper::Client;
 use hyper::header::Connection;
-use serde_json::{Value, Error};
+use serde_json::Value;
 use std::time::Duration;
 use libc::{kill, SIGTERM};
 
@@ -26,11 +24,6 @@ fn get_json_from_url(url: &str, cl: &Client) -> String {
     res.read_to_string(&mut json_response).unwrap();
 
     json_response
-}
-
-fn get_field_from_json(json_response_from_url: &str, desired_field: &str) -> Value {
-    let temp: Value = serde_json::from_str(json_response_from_url).unwrap();
-    *temp.as_object().unwrap().get(desired_field).unwrap()
 }
 
 fn main() {
@@ -142,9 +135,10 @@ fn main() {
             println!("Success...");
             println!("Pulling data...");
 
-            first_wallet.available_satoshi = get_field_from_json(&get_json_from_url(&first_wallet.wallet_balance(), &client), "balance")
-                .as_f64()
-                .unwrap();
+            let data: Value = serde_json::from_str(&get_json_from_url(&first_wallet.wallet_balance(), &client)).unwrap();
+            let obj = data.as_object().unwrap();
+            let foo = obj.get("balance").unwrap();
+            first_wallet.available_satoshi = foo.as_f64().unwrap();
             
             let mut writer = io::BufWriter::new(fs::File::create("wallet.bin").unwrap());
             bincode::serde::serialize_into(&mut writer, &first_wallet, bincode::SizeLimit::Infinite).unwrap();
