@@ -5,6 +5,7 @@ dependencies = [
  "bincode 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_macros 0.6.14 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -276,6 +277,15 @@ dependencies = [
  "aster 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "quasi 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "quasi_macros 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "serde_json"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num 0.1.31 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

@@ -4,6 +4,7 @@ extern crate libc;
 extern crate hyper;
 extern crate bincode;
 extern crate serde;
+extern crate serde_json;
 
 pub mod wallet;
 mod conversions;
@@ -11,35 +12,41 @@ mod command_line;
 
 use std::{io, thread, fs, path};
 use std::io::Read;
+use std::collections;
+use std::cell::RefCell;
 use hyper::Client;
 use hyper::header::Connection;
+use serde_json::{Value, Error};
 use std::time::Duration;
 use libc::{kill, SIGTERM};
 
-fn get_response_from_url(url: String, cl: &Client) -> String {
-    let mut res = cl.get(&url).header(Connection::close()).send().unwrap();
-    let mut json_response = String::new();   
+fn get_response_from_url(url: &str, cl: &Client) -> String {
+    let mut json_response = String::new(); 
+    let mut res = cl.get(url).header(Connection::close()).send().unwrap();   
     res.read_to_string(&mut json_response).unwrap();
 
     json_response
 }
 
+fn get_field_from_json(json_response_from_url: &str, desired_field: &str) -> Value {
+    let temp: Value = serde_json::from_str(json_response_from_url).unwrap();
+    *temp.as_object().unwrap().get(desired_field).unwrap()
+}
+
 fn main() {
     let child = command_line::initialize_server().unwrap_or_else(|e| { panic!("Failed to start server: {}", e); });
-
+    let client = Client::new();
     let input = io::stdin();
     
     thread::park_timeout(Duration::from_millis(2000));
 
-    if path::Path::new("wallet.bin").exists() {
-        let client = Client::new();
-        
+    if path::Path::new("wallet.bin").exists() {        
         let mut reader = io::BufReader::new(fs::File::open("wallet.bin").unwrap());
         let wallet: wallet::Wallet = bincode::serde::deserialize_from(&mut reader, bincode::SizeLimit::Infinite).unwrap();
-
-        if get_response_from_url(wallet.login(), &client).as_str().contains("true") {
+        
+        if get_response_from_url(&wallet.login(), &client).contains("true") {
             println!("Successful login...");
-
+            
             println!("1 - send payment\n2 - fetch wallet balance\n3 - fetch balance at specific address\n4 - list wallet addresses\n5 - generate new address\n6 - generate new address with specified label\n7 - archive address\n8 - unarchive address");
 
             let mut option = String::new();
@@ -54,24 +61,30 @@ fn main() {
                     println!("Enter amount in BTC:");
                     let mut amount_btc = String::new();
                     input.read_line(&mut amount_btc).expect("Failed to read");
+                    let amount_satoshi = amount_btc
+                        .parse::<f64>()
+                        .expect("Failed to parse");
 
-                    //add validation for addresses/viable amount to spend
-                    get_response_from_url(wallet.send_payment(&destination.trim(), conversions::btc_to_satoshi(amount_btc.trim().parse::<f32>().expect("Failed to parse"))), &client);
-                    println!("Success, pushing payment...");
-                    thread::park_timeout(Duration::from_millis(5000));
+                    if amount_satoshi < wallet.available_satoshi {
+                        get_response_from_url(&wallet.send_payment(&destination.trim(), amount_satoshi), &client);
+                        println!("Success, pushing payment...");
+                        thread::park_timeout(Duration::from_millis(5000));
+                    } else {
+                        println!("Error: insufficient funds");
+                    }
                 },
-                2 => println!("{}", get_response_from_url(wallet.wallet_balance(), &client)),
+                2 => println!("{} BTC", (wallet.available_satoshi / 100000000.0).to_string()),
                 3 => {
                     println!("Enter addresss:");
                     let mut address = String::new();
                     input.read_line(&mut address).expect("Failed to read");
 
-                    get_response_from_url(wallet.address_balance(&address.trim()), &client);
+                    get_response_from_url(&wallet.address_balance(&address.trim()), &client);
                 },
-                4 => println!("{}", get_response_from_url(wallet.address_list(), &client)),
+                4 => println!("{}", get_response_from_url(&wallet.address_list(), &client)),
                 5 => {
                     println!("Generating new address...");
-                    get_response_from_url(wallet.generate_address(), &client);
+                    get_response_from_url(&wallet.generate_address(), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
@@ -80,7 +93,7 @@ fn main() {
                     let mut label = String::new();
                     input.read_line(&mut label).expect("Failed to read");
                     println!("Generating new address with label {}...", label);
-                    get_response_from_url(wallet.generate_address_with_label(&label.trim()), &client);
+                    get_response_from_url(&wallet.generate_address_with_label(&label.trim()), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
@@ -88,7 +101,7 @@ fn main() {
                     println!("Enter address to archive:");
                     let mut address = String::new();
                     input.read_line(&mut address).expect("Failed to read");
-                    get_response_from_url(wallet.archive_address(&address.trim()), &client);
+                    get_response_from_url(&wallet.archive_address(&address.trim()), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
@@ -96,7 +109,7 @@ fn main() {
                     println!("Enter address to unarchive:");
                     let mut address = String::new();
                     input.read_line(&mut address).expect("Failed to read");
-                    get_response_from_url(wallet.unarchive_address(&address.trim()), &client);
+                    get_response_from_url(&wallet.unarchive_address(&address.trim()), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
@@ -113,16 +126,32 @@ fn main() {
         println!("Enter blockchain wallet identifier:");
         let mut guid = String::new();
         input.read_line(&mut guid).expect("Failed to read");
-        first_wallet.guid = guid.trim().to_string();
+        first_wallet.guid = guid
+            .trim()
+            .to_string();
         
         println!("Enter blockchain wallet password: ");
         let mut password = String::new();
         input.read_line(&mut password).expect("Failed to read");
-        first_wallet.main_password = password.trim().to_string();
+        first_wallet.main_password = password
+            .trim()
+            .to_string();
 
-        let mut writer = io::BufWriter::new(fs::File::create("wallet.bin").unwrap());
-        bincode::serde::serialize_into(&mut writer, &first_wallet, bincode::SizeLimit::Infinite).unwrap();
-        println!("Initial wallet configured, exiting...");
+        println!("Logging in...");
+        if get_response_from_url(&first_wallet.login(), &client).contains("true") {
+            println!("Success...");
+            println!("Pulling data...");
+
+            first_wallet.available_satoshi = get_field_from_json(&get_response_from_url(&first_wallet.wallet_balance(), &client), "balance")
+                .as_f64()
+                .unwrap();
+            
+            let mut writer = io::BufWriter::new(fs::File::create("wallet.bin").unwrap());
+            bincode::serde::serialize_into(&mut writer, &first_wallet, bincode::SizeLimit::Infinite).unwrap();
+            println!("Initial wallet configured, exiting...");
+        } else {
+            println!("Login failed, exiting...");
+        }        
     }
     
     unsafe {
