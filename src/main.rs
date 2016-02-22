@@ -66,7 +66,7 @@ fn main() {
                         println!("Error: insufficient funds");
                     }
                 },
-                2 => println!("{} BTC", (wallet.available_satoshi / 100000000.0).to_string()),
+                2 => println!("{} BTC", conversions::satoshi_to_btc(wallet.available_satoshi).to_string()),
                 3 => {
                     println!("Enter addresss:");
                     let mut address = String::new();
@@ -138,6 +138,7 @@ fn main() {
             let data: Value = serde_json::from_str(&get_json_from_url(&first_wallet.wallet_balance(), &client)).unwrap();
             let obj = data.as_object().unwrap();
             let foo = obj.get("balance").unwrap();
+            
             first_wallet.available_satoshi = foo.as_f64().unwrap();
             
             let mut writer = io::BufWriter::new(fs::File::create("wallet.bin").unwrap());
