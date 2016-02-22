@@ -54,9 +54,9 @@ fn main() {
                     println!("Enter amount in BTC:");
                     let mut amount_btc = String::new();
                     input.read_line(&mut amount_btc).expect("Failed to read");
-                    let amount_satoshi = amount_btc
+                    let amount_satoshi = conversions::btc_to_satoshi(amount_btc
                         .parse::<f64>()
-                        .expect("Failed to parse");
+                        .expect("Failed to parse"));
 
                     if amount_satoshi < wallet.available_satoshi {
                         get_json_from_url(&wallet.send_payment(&destination.trim(), amount_satoshi), &client);
