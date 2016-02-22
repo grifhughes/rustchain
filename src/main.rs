@@ -20,7 +20,7 @@ use serde_json::{Value, Error};
 use std::time::Duration;
 use libc::{kill, SIGTERM};
 
-fn get_response_from_url(url: &str, cl: &Client) -> String {
+fn get_json_from_url(url: &str, cl: &Client) -> String {
     let mut json_response = String::new(); 
     let mut res = cl.get(url).header(Connection::close()).send().unwrap();   
     res.read_to_string(&mut json_response).unwrap();
@@ -44,7 +44,7 @@ fn main() {
         let mut reader = io::BufReader::new(fs::File::open("wallet.bin").unwrap());
         let wallet: wallet::Wallet = bincode::serde::deserialize_from(&mut reader, bincode::SizeLimit::Infinite).unwrap();
         
-        if get_response_from_url(&wallet.login(), &client).contains("true") {
+        if get_json_from_url(&wallet.login(), &client).contains("true") {
             println!("Successful login...");
             
             println!("1 - send payment\n2 - fetch wallet balance\n3 - fetch balance at specific address\n4 - list wallet addresses\n5 - generate new address\n6 - generate new address with specified label\n7 - archive address\n8 - unarchive address");
@@ -66,7 +66,7 @@ fn main() {
                         .expect("Failed to parse");
 
                     if amount_satoshi < wallet.available_satoshi {
-                        get_response_from_url(&wallet.send_payment(&destination.trim(), amount_satoshi), &client);
+                        get_json_from_url(&wallet.send_payment(&destination.trim(), amount_satoshi), &client);
                         println!("Success, pushing payment...");
                         thread::park_timeout(Duration::from_millis(5000));
                     } else {
@@ -79,12 +79,12 @@ fn main() {
                     let mut address = String::new();
                     input.read_line(&mut address).expect("Failed to read");
 
-                    get_response_from_url(&wallet.address_balance(&address.trim()), &client);
+                    get_json_from_url(&wallet.address_balance(&address.trim()), &client);
                 },
-                4 => println!("{}", get_response_from_url(&wallet.address_list(), &client)),
+                4 => println!("{}", get_json_from_url(&wallet.address_list(), &client)),
                 5 => {
                     println!("Generating new address...");
-                    get_response_from_url(&wallet.generate_address(), &client);
+                    get_json_from_url(&wallet.generate_address(), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
@@ -93,7 +93,7 @@ fn main() {
                     let mut label = String::new();
                     input.read_line(&mut label).expect("Failed to read");
                     println!("Generating new address with label {}...", label);
-                    get_response_from_url(&wallet.generate_address_with_label(&label.trim()), &client);
+                    get_json_from_url(&wallet.generate_address_with_label(&label.trim()), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
@@ -101,7 +101,7 @@ fn main() {
                     println!("Enter address to archive:");
                     let mut address = String::new();
                     input.read_line(&mut address).expect("Failed to read");
-                    get_response_from_url(&wallet.archive_address(&address.trim()), &client);
+                    get_json_from_url(&wallet.archive_address(&address.trim()), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
@@ -109,7 +109,7 @@ fn main() {
                     println!("Enter address to unarchive:");
                     let mut address = String::new();
                     input.read_line(&mut address).expect("Failed to read");
-                    get_response_from_url(&wallet.unarchive_address(&address.trim()), &client);
+                    get_json_from_url(&wallet.unarchive_address(&address.trim()), &client);
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
@@ -138,11 +138,11 @@ fn main() {
             .to_string();
 
         println!("Logging in...");
-        if get_response_from_url(&first_wallet.login(), &client).contains("true") {
+        if get_json_from_url(&first_wallet.login(), &client).contains("true") {
             println!("Success...");
             println!("Pulling data...");
 
-            first_wallet.available_satoshi = get_field_from_json(&get_response_from_url(&first_wallet.wallet_balance(), &client), "balance")
+            first_wallet.available_satoshi = get_field_from_json(&get_json_from_url(&first_wallet.wallet_balance(), &client), "balance")
                 .as_f64()
                 .unwrap();
             
