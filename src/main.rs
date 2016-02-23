@@ -60,10 +60,11 @@ fn main() {
                                                                      .expect("Failed to parse"));
 
                     if amount_satoshi < wallet.available_satoshi {
-                        get_json_from_url(&wallet.send_payment(&destination.trim(), amount_satoshi), &client);
-                        println!("Success, pushing payment...");
-                        
+                        println!("{}", get_json_from_url(&wallet.send_payment(&destination.trim(), amount_satoshi), &client));
+                                             
                         thread::park_timeout(Duration::from_millis(5000));
+
+                        println!("Success, pushing payment...");
                     } else {
                         println!("Error: insufficient funds");
                     }
@@ -76,9 +77,9 @@ fn main() {
 
                     let data: Value = serde_json::from_str(&get_json_from_url(&wallet.address_balance(&address.trim()), &client)).unwrap();
                     let obj = data.as_object().unwrap();
-                    let foo = obj.get("balance").unwrap();
+                    let balance = obj.get("balance").unwrap();
 
-                    println!("{}: {:?} BTC", address.trim(), foo) 
+                    println!("{}: {:?} BTC", address.trim(), balance) 
                 },
                 4 => println!("{}", get_json_from_url(&wallet.address_list(), &client)),
                 5 => {
@@ -86,11 +87,11 @@ fn main() {
                     
                     let data: Value = serde_json::from_str(&get_json_from_url(&wallet.generate_address(), &client)).unwrap();
                     let obj = data.as_object().unwrap();
-                    let foo = obj.get("address").unwrap();
+                    let address = obj.get("address").unwrap();
                     
                     thread::park_timeout(Duration::from_millis(2000));
                     
-                    println!("New address: {:?}", foo);
+                    println!("New address: {:?}", address);
                 },
                 6 => {
                     println!("Enter desired label:");
