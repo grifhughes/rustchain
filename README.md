@@ -3,7 +3,11 @@ Basic command line wrapper written in Rust for the blockchain wallet api, requir
 
 Must have blockchain wallet serivice installed, see: https://github.com/blockchain/service-my-wallet-v3#installation
 
-TODO
+# Usage
+
+Run the program and proceed through the steps, automatically manages api service
+
+# TODO
 - command line args vs. user input
 - decode JSON responses
 - handle multiple wallet files
