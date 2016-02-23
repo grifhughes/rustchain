@@ -72,9 +72,13 @@ fn main() {
                 3 => {
                     println!("Enter addresss:");
                     let mut address = String::new();
-                    input.read_line(&mut address).expect("Failed to read");
+                    input.read_line(&mut address).expect("Failed to read");                
 
-                    get_json_from_url(&wallet.address_balance(&address.trim()), &client);
+                    let data: Value = serde_json::from_str(&get_json_from_url(&wallet.address_balance(&address.trim()), &client)).unwrap();
+                    let obj = data.as_object().unwrap();
+                    let foo = obj.get("balance").unwrap();
+
+                    println!("{}: {:?} BTC", address.trim(), foo) 
                 },
                 4 => println!("{}", get_json_from_url(&wallet.address_list(), &client)),
                 5 => {
