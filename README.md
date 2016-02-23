@@ -7,6 +7,10 @@ Must have blockchain wallet serivice installed, see: https://github.com/blockcha
 
 Run the program and proceed through the steps, automatically manages api service
 
+# Installation
+
+Clone this repository, build with nightly compiler and run (--release preferred), untested on non-UNIX systems
+
 # TODO
 - command line args vs. user input
 - decode JSON responses
