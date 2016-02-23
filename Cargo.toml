@@ -6,6 +6,6 @@ authors = ["Grif Hughes <ghughes@smu.edu>"]
 [dependencies]
 hyper = "0.7.2"
 serde = "0.6.13"
-serde_macros = "*"
-serde_json = "*"
-bincode = "*"
+serde_macros = "0.6.13"
+serde_json = "0.6.0"
+bincode = "0.4.0"
