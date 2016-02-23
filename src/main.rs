@@ -62,6 +62,7 @@ fn main() {
                     if amount_satoshi < wallet.available_satoshi {
                         get_json_from_url(&wallet.send_payment(&destination.trim(), amount_satoshi), &client);
                         println!("Success, pushing payment...");
+                        
                         thread::park_timeout(Duration::from_millis(5000));
                     } else {
                         println!("Error: insufficient funds");
@@ -78,18 +79,29 @@ fn main() {
                 4 => println!("{}", get_json_from_url(&wallet.address_list(), &client)),
                 5 => {
                     println!("Generating new address...");
-                    get_json_from_url(&wallet.generate_address(), &client);
+                    
+                    let data: Value = serde_json::from_str(&get_json_from_url(&wallet.generate_address(), &client)).unwrap();
+                    let obj = data.as_object().unwrap();
+                    let foo = obj.get("address").unwrap();
                     
                     thread::park_timeout(Duration::from_millis(2000));
+                    
+                    println!("New address: {:?}", foo);
                 },
                 6 => {
                     println!("Enter desired label:");
                     let mut label = String::new();
                     input.read_line(&mut label).expect("Failed to read");
-                    println!("Generating new address with label {}...", label);
-                    get_json_from_url(&wallet.generate_address_with_label(&label.trim()), &client);
+                    println!("Generating new address with label...");
+
+                    let data: Value = serde_json::from_str(&get_json_from_url(&wallet.generate_address_with_label(&label.trim()), &client)).unwrap();
+                    let obj = data.as_object().unwrap();
+                    let foo = obj.get("address").unwrap();
+                    let bar = obj.get("label").unwrap();
                     
                     thread::park_timeout(Duration::from_millis(2000));
+                    
+                    println!("New address: {:?}\nLabel: {:?}", foo, bar);
                 },
                 7 => {
                     println!("Enter address to archive:");

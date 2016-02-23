@@ -14,6 +14,7 @@ pub struct Wallet {
     pub secondary_password: Option<String>   
 }
 
+//REMAINING API CALLS: HD FUNCTIONALITY
 impl Wallet {
     pub fn login(&self) -> String {
         MERCHANT_ENDPOINT.to_string() + &self.guid + "/login?password=" + &self.main_password + "&api_code=" + API_CODE
