@@ -5,31 +5,48 @@ extern crate hyper;
 extern crate bincode;
 extern crate serde;
 extern crate serde_json;
+extern crate crypto;
+extern crate rand;
 
 pub mod wallet;
 mod conversions;
 mod command_line;
+mod encrypt;
 
 use std::{io, thread, fs, path};
+use std::process::Child;
 use std::io::Read;
 use hyper::Client;
 use hyper::header::Connection;
 use serde_json::Value;
 use std::time::Duration;
 use libc::{kill, SIGTERM};
+use rand::{ Rng, OsRng };
+
+fn kill_process(child: Child) {
+    unsafe {
+        kill(child.id() as i32, SIGTERM);
+    }
+}
 
 fn get_json_from_url(url: &str, cl: &Client) -> String {
     let mut json_response = String::new(); 
     let mut res = cl.get(url).header(Connection::close()).send().unwrap();   
     res.read_to_string(&mut json_response).unwrap();
-
     json_response
 }
 
 fn main() {
-    let child = command_line::initialize_server().unwrap_or_else(|e| { panic!("Failed to start server: {}", e); });
+    let child = command_line::initialize_server().unwrap_or_else(|e| { panic!("Failed to start server: {}", e) });
     let client = Client::new();
     let input = io::stdin();
+
+    //crypto
+    let mut key: [u8; 32] = [0; 32];
+    let mut iv: [u8; 16] = [0; 16];
+    let mut rng = OsRng::new().ok().unwrap();
+    rng.fill_bytes(&mut key);
+    rng.fill_bytes(&mut iv);
     
     thread::park_timeout(Duration::from_millis(2000));
 
@@ -124,7 +141,11 @@ fn main() {
                     
                     thread::park_timeout(Duration::from_millis(2000));
                 },
-                _ => panic!("Error invalid option")
+                _ => {
+                    kill_process(child);
+                    panic!("Error invalid option");
+                }
+                    
             }
         } else {
             println!("Invalid login, exiting...");
@@ -158,16 +179,17 @@ fn main() {
             let foo = obj.get("balance").unwrap();
             
             first_wallet.available_satoshi = foo.as_f64().unwrap();
+
+            let file = fs::File::create("wallet.bin").unwrap();
             
-            let mut writer = io::BufWriter::new(fs::File::create("wallet.bin").unwrap());
+            let mut writer = io::BufWriter::new(file);
             bincode::serde::serialize_into(&mut writer, &first_wallet, bincode::SizeLimit::Infinite).unwrap();
+
             println!("Initial wallet configured, exiting...");
         } else {
             println!("Login failed, exiting...");
         }        
     }
     
-    unsafe {
-        kill(child.id() as i32, SIGTERM);
-    }
+
 }        

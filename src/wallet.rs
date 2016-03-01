@@ -17,7 +17,14 @@ pub struct Wallet {
 //REMAINING API CALLS: HD FUNCTIONALITY
 impl Wallet {
     pub fn login(&self) -> String {
-        MERCHANT_ENDPOINT.to_string() + &self.guid + "/login?password=" + &self.main_password + "&api_code=" + API_CODE
+        let mut login = String::new();
+        login.push_str(MERCHANT_ENDPOINT);
+        login.push_str(&self.guid);
+        login.push_str(&"/login?password=");
+        login.push_str(&self.main_password);
+        login.push_str("&api_code=");
+        login.push_str(API_CODE);
+        login
     }
 
     //TODO: Implement in main
